@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dontpad Clone</title>
+</head>
+<body>
+    <textarea id="textBox" rows="10" cols="50"></textarea>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:8080/ws");
+
+        socket.onopen = function() {
+            console.log("Connected to WebSocket");
+        };
+
+        socket.onmessage = function(event) {
+            document.getElementById("textBox").value = event.data;
+        };
+
+        document.getElementById("textBox").addEventListener("input", function(event) {
+            socket.send(event.target.value);
+        });
+
+        socket.onclose = function() {
+            console.log("WebSocket connection closed");
+        };
+    </script>
+</body>
+</html>
