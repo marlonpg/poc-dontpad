@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GambaPad</title>
+    <script src="src/main/resources/static/ws-client.js" defer></script>
+</head>
+<body>
+<h1>GambaPad - WebSocket Test</h1>
+<textarea id="editor" rows="10" cols="50"></textarea>
+<br>
+<button onclick="sendMessage()">Send</button>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const path = window.location.pathname.split('/').pop();
+        const socket = new WebSocket(`ws://localhost:8080/ws`);
+
+        socket.onopen = () => {
+            console.log("✅ WebSocket connected");
+            socket.send("Hello from client!"); // Send an initial message
+        };
+
+        socket.onmessage = (event) => {
+            console.log("📩 Received:", event.data);
+            document.getElementById("editor").value = event.data; // Update text area
+        };
+
+        socket.onclose = (event) => {
+            console.warn("❌ WebSocket closed:", event);
+        };
+
+        socket.onerror = (error) => {
+            console.error("⚠️ WebSocket error:", error);
+        };
+
+        window.sendMessage = function () {
+            const text = document.getElementById("editor").value;
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(text);
+                console.log("📤 Sent:", text);
+            } else {
+                console.warn("⚠️ WebSocket is not open");
+            }
+        };
+    });
+</script>
+</body>
+
+</html>
