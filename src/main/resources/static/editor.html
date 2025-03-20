@@ -19,7 +19,7 @@
         socket.onopen = () => {
             console.log("WebSocket connected");
             // Optionally send an initial message with the path
-            socket.send(JSON.stringify({ path, text: "Hello from client!" }));
+            //socket.send(JSON.stringify({ path, text: "Hello from client!" }));
         };
 
         socket.onmessage = (event) => {

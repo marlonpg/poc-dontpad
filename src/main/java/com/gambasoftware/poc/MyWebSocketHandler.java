@@ -25,6 +25,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         logger.info("Connection established session {}", session);
+        handleTextMessage(session, );
     }
 
 
