@@ -1,13 +1,14 @@
 package com.gambasoftware.poc;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gambasoftware.poc.services.NoteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.socket.*;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -23,9 +24,17 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
+    public void afterConnectionEstablished(WebSocketSession session) throws IOException {
         logger.info("Connection established session {}", session);
-        handleTextMessage(session, );
+
+        String path = extractPath(session);
+        logger.info("Connection established with path {}", path);
+        sessionsByPath.putIfAbsent(path, new CopyOnWriteArrayList<>());
+        sessionsByPath.get(path).add(session);
+
+        String content = noteService.getNote(path);
+
+        session.sendMessage(new TextMessage(content));
     }
 
 
@@ -33,10 +42,8 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
         logger.info("Processing message {}", message.getPayload());
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(message.getPayload());
-            String path = jsonNode.get("path").asText();
-            String text = jsonNode.get("text").asText();
+            String path = extractPath(session);
+            String text = message.getPayload();
 
             sessionsByPath.putIfAbsent(path, new CopyOnWriteArrayList<>());
             sessionsByPath.get(path).add(session);
@@ -44,7 +51,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             noteService.saveNote(path, text);
 
             for (WebSocketSession s : sessionsByPath.getOrDefault(path, new CopyOnWriteArrayList<>())) {
-                if (s.isOpen()) {
+                if (s.isOpen() && s != session) {
                     s.sendMessage(message);
                 }
             }
@@ -57,5 +64,10 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         logger.info("Connection closed session {}, status {}", session, status);
+    }
+
+    private String extractPath(WebSocketSession session) {
+        String uri = session.getUri().toString();
+        return uri.substring(uri.lastIndexOf("/") + 1);
     }
 }

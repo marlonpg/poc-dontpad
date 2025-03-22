@@ -14,24 +14,17 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const path = window.location.pathname.split('/').pop();
-        const socket = new WebSocket(`ws://localhost:8080/ws`);
+        const socket = new WebSocket(`ws://localhost:8080/ws/${path}`);
 
         socket.onopen = () => {
             console.log("WebSocket connected");
-            // Optionally send an initial message with the path
-            //socket.send(JSON.stringify({ path, text: "Hello from client!" }));
         };
 
         socket.onmessage = (event) => {
             console.log("Received raw message:", event.data);
 
             try {
-                const data = JSON.parse(event.data);
-                console.log("Parsed message:", data);
-
-                if (data.path === path) {
-                    document.getElementById("editor").value = data.text;
-                }
+                document.getElementById("editor").value = event.data;
             } catch (e) {
                 console.error("Failed to parse message:", e, "Raw data:", event.data);
             }
@@ -48,9 +41,8 @@
         window.sendMessage = function () {
             const text = document.getElementById("editor").value;
             if (socket.readyState === WebSocket.OPEN) {
-                const message = JSON.stringify({ path, text });
-                socket.send(message);
-                console.log("Sent:", message);
+                socket.send(text);
+                console.log("Sent:", text);
             } else {
                 console.warn("WebSocket is not open");
             }

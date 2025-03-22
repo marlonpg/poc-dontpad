@@ -12,14 +12,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private MyWebSocketHandler myWebSocketHandler;
 
-        @Override
+    @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(myWebSocketHandler, "/ws").setAllowedOrigins("*");
+        registry.addHandler(myWebSocketHandler, "/ws/{path}").setAllowedOrigins("*");
     }
-//    @Override
-//    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-//        registry.addHandler(myWebSocketHandler, "/ws/{path}")
-//                .setAllowedOrigins("http://localhost:8080")
-//                .withSockJS(); // Enable SockJS fallback options
-//    }
 }
