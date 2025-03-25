@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dontpad Clone</title>
+</head>
+<body>
+<h1>Welcome to Dontpad Clone</h1>
+<input type="text" id="pathInput" placeholder="Enter a path">
+<button onclick="goToPage()">Go</button>
+
+<script>
+    function goToPage() {
+        let path = document.getElementById("pathInput").value.trim();
+        if (path) {
+            window.location.href = "/note/" + encodeURIComponent(path);
+        }
+    }
+</script>
+</body>
+</html>
