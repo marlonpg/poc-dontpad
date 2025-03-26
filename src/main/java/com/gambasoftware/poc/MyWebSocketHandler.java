@@ -71,6 +71,6 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
 
     private String extractPath(WebSocketSession session) {
         String uri = session.getUri().toString();
-        return uri.substring(uri.lastIndexOf("/") + 1);
+        return uri.split("/ws")[1];
     }
 }
