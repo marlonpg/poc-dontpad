@@ -10,13 +10,15 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class MyWebSocketHandler extends TextWebSocketHandler {
     private final Logger logger = LoggerFactory.getLogger(MyWebSocketHandler.class);
-    private static final ConcurrentHashMap<String, CopyOnWriteArrayList<WebSocketSession>> sessionsByPath = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, List<WebSocketSession>> sessionsByPath = new ConcurrentHashMap<>();
     private final NoteService noteService;
 
     public MyWebSocketHandler(NoteService noteService) {
@@ -29,14 +31,13 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
 
         String path = extractPath(session);
         logger.info("Connection established with path {}", path);
-        sessionsByPath.putIfAbsent(path, new CopyOnWriteArrayList<>());
+        sessionsByPath.putIfAbsent(path, Collections.synchronizedList(new ArrayList<WebSocketSession>()));
         sessionsByPath.get(path).add(session);
 
         String content = noteService.getNote(path);
 
         session.sendMessage(new TextMessage(content));
     }
-
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
@@ -45,14 +46,16 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             String path = extractPath(session);
             String text = message.getPayload();
 
-            sessionsByPath.putIfAbsent(path, new CopyOnWriteArrayList<>());
+            sessionsByPath.putIfAbsent(path, Collections.synchronizedList(new ArrayList<WebSocketSession>()));
             sessionsByPath.get(path).add(session);
 
             noteService.saveNote(path, text);
-
-            for (WebSocketSession s : sessionsByPath.getOrDefault(path, new CopyOnWriteArrayList<>())) {
-                if (s.isOpen() && s != session) {
-                    s.sendMessage(message);
+            List<WebSocketSession> list = sessionsByPath.get(path);
+            synchronized(list) {
+                for (WebSocketSession s : list) {
+                    if (s.isOpen() && s != session) {
+                        s.sendMessage(message);
+                    }
                 }
             }
         } catch (Exception e) {

@@ -6,11 +6,9 @@
     <title>GambaPad</title>
 </head>
 <body>
-<h1>GambaPad - WebSocket Test</h1>
-<textarea id="editor" rows="10" cols="50"></textarea>
+<h1>GambaPad</h1>
+<textarea id="editor" rows="70" cols="300"></textarea>
 <br>
-<button onclick="sendMessage()">Send</button>
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const path = window.location.pathname.split('/').pop();
@@ -47,6 +45,16 @@
                 console.warn("WebSocket is not open");
             }
         };
+
+        // Send message automatically when the textarea changes
+        editor.addEventListener("input", () => {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(editor.value);
+                console.log("Sent:", payload);
+            } else {
+                console.warn("WebSocket is not open");
+            }
+        });
     });
 </script>
 </body>
